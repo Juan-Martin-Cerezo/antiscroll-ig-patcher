@@ -36,6 +36,18 @@ fácil refrescar los nombres de recurso si IG cambia (ids actuales del visor:
 clips_viewer_view_pager y clips_swipe_refresh_container, verificados con
 uiautomator dump; atados en SwipeGuard.java).
 
+## TRAMPA de dexlib3/art conocida (la que costó el crash del perfil)
+El `invoke-static` (35c) DIRECCIONA solo registros v0..v15. En
+`onInterceptTouchEvent` el ViewPager tiene 20 registros → p0 = v18 y el
+assembler DROPEA el invoke de forma silenciosa; queda `move-result` sin
+fuente y ART lo tira como VerifyError en TODO subclass del ViewPager al
+inflar (el perfil = NestableViewPager → crash). FIX: copiar p0 a un
+registro chico antes del invoke:
+`move-object/16 v1, p0` + `invoke-static {v1}, ...shouldBlock`.
+AL NOMINAR una modificación bytecode SEMEJANTE: verificar SIEMPRE el dex del
+output ANTES de instalar (dexdump -d classes.dex + grep del invoke), el
+builder de dexlib3 no avisa. La verificación salvó esta trampa dos veces.
+
 ## Cómo verificar un build local
     . ./keystore.env && ./build.sh instagram-<version>.xapk --clone
     # en build/patch-report.json deben salir OK los 12 patches:

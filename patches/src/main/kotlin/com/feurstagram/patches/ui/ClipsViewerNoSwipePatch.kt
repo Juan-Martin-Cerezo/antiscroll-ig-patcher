@@ -61,14 +61,21 @@ val clipsViewerNoSwipePatch = bytecodePatch(
             val registerCount = method.implementation?.registerCount
                 ?: throw PatchException("ViewPager ${fingerprint.name} has no implementation")
             // p0 = this (ViewPager), p1 = MotionEvent; v0 must be free at entry.
-            if (registerCount < 3) {
+            // ROOT CAUSE of the profile crash: invoke-static (35c) can only
+            // address registers v0..v15. onInterceptTouchEvent has 20 registers,
+            // so p0 = v18 and the assembler silently DROPPED the 35c invoke,
+            // leaving a move-result without its source (ART: VerifyError ->
+            // every ViewPager subclass fails to inflate). Copy p0 into a low
+            // register first with the /16 form, which any register accepts.
+            if (registerCount < 4) {
                 throw PatchException("ViewPager ${fingerprint.name} has no free register")
             }
 
             method.addInstructionsWithLabels(
                 0,
                 """
-                    invoke-static { p1 }, $GUARD_CLASS->shouldBlock(Landroid/view/View;)Z
+                    move-object/16 v1, p0
+                    invoke-static { v1 }, $GUARD_CLASS->shouldBlock(Landroid/view/View;)Z
                     move-result v0
                     if-eqz v0, :proceed
                     const/4 v0, 0x0
