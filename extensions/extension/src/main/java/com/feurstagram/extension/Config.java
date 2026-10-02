@@ -159,6 +159,14 @@ public final class Config {
     public static boolean arePopupsHidden() { return getBlocked("hide_toasts", true); }
 
     /**
+     * Whether the reels viewer's swipe-to-next is disabled (Plan B): entry keeps
+     * working from a DM or a feed post, but a horizontal glide inside the pager
+     * cannot land on another reel. On by default; lockable like the content
+     * blocks because swiping is exactly the behaviour being cut off.
+     */
+    public static boolean isClipsSwipeBlocked() { return getBlocked("block_clip_swipe", true); }
+
+    /**
      * Bottom-navigation icon visibility, stored per tab as {@code nav_show_<tab>}
      * (true = shown). Independent of the content blocks, so hiding the Reels
      * *icon* is decoupled from blocking Reels *content*. Home is deliberately not

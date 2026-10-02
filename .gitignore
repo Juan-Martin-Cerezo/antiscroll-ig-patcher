@@ -1,6 +1,7 @@
 # Build outputs
 *.apk
 *.apkm
+*.xapk
 *.idsig
 *.mpe
 *.mpp
@@ -25,3 +26,4 @@ local.properties
 
 # OS
 .DS_Store
+keystore.env
